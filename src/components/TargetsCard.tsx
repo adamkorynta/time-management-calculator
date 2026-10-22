@@ -97,17 +97,17 @@ export default function TargetsCard({ plan, status, result, errors, onChange }: 
               </tr>
               <tr>
                 <th scope="row">Revised target billable hours per week</th>
-                <td className="text-end">{fmtHours(r.revisedBillableHoursPerWeek)}</td>
+                <td className="text-end">{infeasible ? '—' : fmtHours(r.revisedBillableHoursPerWeek)}</td>
                 <td className="text-end">{fmtHours(r.adjustedBillableHoursPerWeek)}</td>
               </tr>
               <tr>
                 <th scope="row">Revised target non-billable %</th>
-                <td className="text-end">{fmtPct(r.revisedNonBillablePct, 2)}</td>
+                <td className="text-end">{infeasible ? '—' : fmtPct(r.revisedNonBillablePct, 2)}</td>
                 <td className="text-end">{fmtPct(r.adjustedNonBillablePct, 2)}</td>
               </tr>
               <tr>
                 <th scope="row">Revised target non-billable hours per week</th>
-                <td className="text-end">{fmtHours(r.revisedNonBillableHoursPerWeek)}</td>
+                <td className="text-end">{infeasible ? '—' : fmtHours(r.revisedNonBillableHoursPerWeek)}</td>
                 <td className="text-end">{fmtHours(r.adjustedNonBillableHoursPerWeek)}</td>
               </tr>
               <tr className="table-light">
