@@ -174,3 +174,7 @@ summary.card-header {
     width: 100%;
   }
 }
+
+.help-slot {
+  min-height: 1.5rem;
+}

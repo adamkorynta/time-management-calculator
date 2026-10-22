@@ -39,7 +39,7 @@ export default function NumField({ label, value, onChange, unit = 'none', min = 
         )}
         </span>
       </label>
-      <div className="input-group has-validation">
+      <div className="input-group">
         <input
           id={id}
           type="number"
@@ -59,13 +59,15 @@ export default function NumField({ label, value, onChange, unit = 'none', min = 
           }}
         />
         {suffix && <span className="input-group-text">{suffix}</span>}
-        {error && (
-          <div id={`${id}-err`} className="invalid-feedback">
-            {error}
-          </div>
-        )}
       </div>
-      {help && !error && <div className="form-text">{help}</div>}
+      {/* Always reserve the help line so neighbouring fields keep their inputs aligned. */}
+      {error ? (
+        <div id={`${id}-err`} className="invalid-feedback d-block help-slot">
+          {error}
+        </div>
+      ) : (
+        <div className="form-text help-slot">{help ?? ' '}</div>
+      )}
     </div>
   )
 }
