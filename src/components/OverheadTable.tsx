@@ -143,7 +143,7 @@ export default function OverheadTable({ plan, result, errors, onChange }: Props)
             <td className="text-end">{fmtPct(nbPct, 2)}</td>
             <td />
           </tr>
-          <tr className="table-primary fw-semibold">
+          <tr className="fw-semibold">
             <td>Project Billable</td>
             <td className="text-end">{fmtHours(billable.hoursPerWeek)}</td>
             <td className="text-end">{fmtHours(billable.hoursPerYear)}</td>
