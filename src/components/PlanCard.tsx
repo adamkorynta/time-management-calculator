@@ -50,14 +50,17 @@ export default function PlanCard({ plan, result, errors, tierIdx, onTierChange, 
 
         <h6 className="mt-4">Project billable target</h6>
         <div className="row">
-          <div className="col-sm-4">
-            <NumField label="Billable %" unit="pct" max={100} value={plan.billablePct} error={errors.billablePct} tip="Your target share of the annual schedule spent on billable project work, agreed with your supervisor. You can also enter it as hours." onChange={(v) => onChange({ billablePct: v })} />
-          </div>
-          <div className="col-sm-4">
-            <NumField label="Hours/week" unit="h" value={billable.hoursPerWeek} onChange={(v) => onChange({ billablePct: annual > 0 ? (v * 52) / annual : 0 })} />
-          </div>
-          <div className="col-sm-4">
-            <NumField label="Hours/year" unit="h" value={billable.hoursPerYear} onChange={(v) => onChange({ billablePct: annual > 0 ? v / annual : 0 })} />
+          <div className="col-sm-6">
+            <NumField
+              label="Billable %"
+              unit="pct"
+              max={100}
+              value={plan.billablePct}
+              error={errors.billablePct}
+              tip="Your target share of the annual schedule spent on billable project work, agreed with your supervisor."
+              help={`= ${fmtHours(billable.hoursPerWeek)} h/week · ${fmtHours(billable.hoursPerYear)} h/year`}
+              onChange={(v) => onChange({ billablePct: v })}
+            />
           </div>
         </div>
 

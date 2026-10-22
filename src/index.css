@@ -199,10 +199,24 @@ summary.card-header {
   border: 1px solid rgba(0, 0, 0, 0.15);
 }
 
-/* Overhead table: underline the column the user last typed in */
-.cell-source {
-  border-bottom: 2px solid var(--gei-teal);
+/* Overhead table: fixed column widths keep every row the same shape; bold marks the column the user typed */
+.overhead-table {
+  table-layout: fixed;
 }
-.overhead-table .form-control-sm {
-  min-width: 4.5rem;
+.overhead-table .num-col {
+  width: 5.75rem;
+}
+.overhead-table .x-col {
+  width: 2rem;
+}
+.overhead-table td,
+.overhead-table th {
+  padding-left: 0.2rem;
+  padding-right: 0.2rem;
+}
+.overhead-table tfoot td:first-child {
+  padding-left: 0.5rem;
+}
+.cell-source {
+  font-weight: 700;
 }

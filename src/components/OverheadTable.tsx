@@ -10,7 +10,6 @@ interface CellProps {
   label: string
   value: number
   scale?: number
-  suffix?: string
   /** True when this column is the one the user last typed into (kept when the schedule changes). */
   source: boolean
   invalid: boolean
@@ -18,30 +17,30 @@ interface CellProps {
 }
 
 /** Numeric table cell: shows the derived value, keeps a text draft while the user is typing. */
-function Cell({ label, value, scale = 1, suffix, source, invalid, onCommit }: CellProps) {
+function Cell({ label, value, scale = 1, source, invalid, onCommit }: CellProps) {
   const [draft, setDraft] = useState<string | null>(null)
   return (
-    <div className="input-group input-group-sm">
-      <input
-        type="number"
-        inputMode="decimal"
-        min={0}
-        step="any"
-        aria-label={label}
-        className={`form-control text-end ${invalid ? 'is-invalid' : ''} ${source ? 'cell-source' : ''}`}
-        title={source ? 'You entered this column; it stays fixed if your schedule changes.' : undefined}
-        value={draft ?? round(value * scale)}
-        onBlur={() => setDraft(null)}
-        onChange={(e) => {
-          setDraft(e.target.value)
-          const n = e.target.valueAsNumber
-          onCommit(Number.isFinite(n) ? Math.round((n / scale) * 1e9) / 1e9 : 0)
-        }}
-      />
-      {suffix && <span className="input-group-text">{suffix}</span>}
-    </div>
+    <input
+      type="number"
+      inputMode="decimal"
+      min={0}
+      step="any"
+      aria-label={label}
+      className={`form-control form-control-sm text-end ${invalid ? 'is-invalid' : ''} ${source ? 'cell-source' : ''}`}
+      title={source ? 'You entered this column; it stays fixed if your schedule changes.' : undefined}
+      value={draft ?? round(value * scale)}
+      onBlur={() => setDraft(null)}
+      onChange={(e) => {
+        setDraft(e.target.value)
+        const n = e.target.valueAsNumber
+        onCommit(Number.isFinite(n) ? Math.round((n / scale) * 1e9) / 1e9 : 0)
+      }}
+    />
   )
 }
+
+/** Read-only number shown in the same input shape (gray = calculated). */
+const Calc = ({ label, value }: { label: string; value: string }) => <input className="form-control form-control-sm text-end" aria-label={label} value={value} disabled readOnly />
 
 interface Props {
   plan: PlanInputs
@@ -68,21 +67,27 @@ export default function OverheadTable({ plan, result, errors, onChange }: Props)
         <thead>
           <tr>
             <th>Category</th>
-            <th className="text-end">Hours/week</th>
-            <th className="text-end">Hours/year</th>
-            <th className="text-end">Allocation</th>
-            <th />
+            <th className="text-end num-col">Hours/week</th>
+            <th className="text-end num-col">Hours/year</th>
+            <th className="text-end num-col">Allocation %</th>
+            <th className="x-col" />
           </tr>
         </thead>
         <tbody>
           {fixed.map((r) => (
-            <tr key={r.key} className="table-light">
+            <tr key={r.key}>
               <td>
-                {r.label} <span className="text-body-secondary small">(set above)</span>
+                <input className="form-control form-control-sm" aria-label={`${r.label} (set above)`} value={`${r.label} (set above)`} title={r.label} disabled readOnly />
               </td>
-              <td className="text-end">{fmtHours(r.hoursPerWeek)}</td>
-              <td className="text-end">{fmtHours(r.hoursPerYear)}</td>
-              <td className="text-end">{fmtPct(r.pct, 2)}</td>
+              <td>
+                <Calc label={`${r.label} hours per week`} value={fmtHours(r.hoursPerWeek)} />
+              </td>
+              <td>
+                <Calc label={`${r.label} hours per year`} value={fmtHours(r.hoursPerYear)} />
+              </td>
+              <td>
+                <Calc label={`${r.label} percent`} value={fmtPct(r.pct, 2).replace('%', '')} />
+              </td>
               <td />
             </tr>
           ))}
@@ -96,18 +101,19 @@ export default function OverheadTable({ plan, result, errors, onChange }: Props)
                     className={`form-control form-control-sm ${bad && !o.label.trim() ? 'is-invalid' : ''}`}
                     aria-label="Category name"
                     value={o.label}
+                    title={o.label}
                     maxLength={80}
                     onChange={(e) => update(o.id, { label: e.target.value })}
                   />
                 </td>
-                <td style={{ minWidth: 96 }}>
+                <td>
                   <Cell label={`${o.label} hours per week`} value={r.hoursPerWeek} source={o.basis === 'week'} invalid={bad} onCommit={(v) => setCell(o.id, 'week', v)} />
                 </td>
-                <td style={{ minWidth: 104 }}>
+                <td>
                   <Cell label={`${o.label} hours per year`} value={r.hoursPerYear} source={o.basis === 'year'} invalid={bad} onCommit={(v) => setCell(o.id, 'year', v)} />
                 </td>
-                <td style={{ minWidth: 104 }}>
-                  <Cell label={`${o.label} percent`} value={r.pct} scale={100} suffix="%" source={o.basis === 'pct'} invalid={bad} onCommit={(v) => setCell(o.id, 'pct', v)} />
+                <td>
+                  <Cell label={`${o.label} percent`} value={r.pct} scale={100} source={o.basis === 'pct'} invalid={bad} onCommit={(v) => setCell(o.id, 'pct', v)} />
                 </td>
                 <td className="text-end">
                   <button type="button" className="btn btn-sm btn-outline-danger border-0" aria-label={`Remove ${o.label}`} title="Remove this row" onClick={() => onChange({ overhead: plan.overhead.filter((x) => x.id !== o.id) })}>
@@ -154,7 +160,7 @@ export default function OverheadTable({ plan, result, errors, onChange }: Props)
           {m}
         </div>
       ))}
-      <div className="form-text">Type into any column of a row; the other two update. The column you typed in (underlined) stays fixed if your schedule changes.</div>
+      <div className="form-text">Type into any column of a row; the other two update. The column you typed in (bold) stays fixed if your schedule changes. Gray rows are calculated.</div>
     </div>
   )
 }
