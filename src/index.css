@@ -1,0 +1,100 @@
+/*
+ * GEI brand theme, sampled from geiconsultants.com:
+ * navy #003E53, teal #007390, red #B0122A, gold #ECB83C, cream #F7F5F1,
+ * Source Sans Pro body + Fjalla One headings (loaded in index.html).
+ */
+:root {
+  --gei-navy: #003e53;
+  --gei-teal: #007390;
+  --gei-red: #b0122a;
+  --gei-gold: #ecb83c;
+  --gei-cream: #f7f5f1;
+
+  --bs-primary: var(--gei-navy);
+  --bs-primary-rgb: 0, 62, 83;
+  --bs-secondary: var(--gei-teal);
+  --bs-secondary-rgb: 0, 115, 144;
+  --bs-danger: var(--gei-red);
+  --bs-danger-rgb: 176, 18, 42;
+  --bs-warning: var(--gei-gold);
+  --bs-warning-rgb: 236, 184, 60;
+  --bs-body-bg: var(--gei-cream);
+  --bs-body-color: var(--gei-navy);
+  --bs-body-color-rgb: 0, 62, 83;
+  --bs-link-color: var(--gei-teal);
+  --bs-link-color-rgb: 0, 115, 144;
+  --bs-link-hover-color: var(--gei-navy);
+  --bs-primary-bg-subtle: #d9e6ea;
+  --bs-primary-border-subtle: #99b2bb;
+  --bs-primary-text-emphasis: var(--gei-navy);
+  --bs-success-bg-subtle: #e3f1e4;
+  --bs-font-sans-serif: 'Source Sans 3', 'Source Sans Pro', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --bs-card-bg: #fff;
+  --bs-border-radius: 0.25rem;
+}
+
+.btn-primary,
+.btn-outline-primary:hover {
+  --bs-btn-bg: var(--gei-navy);
+  --bs-btn-border-color: var(--gei-navy);
+  --bs-btn-hover-bg: var(--gei-teal);
+  --bs-btn-hover-border-color: var(--gei-teal);
+  --bs-btn-active-bg: var(--gei-teal);
+}
+.btn-outline-primary {
+  --bs-btn-color: var(--gei-teal);
+  --bs-btn-border-color: var(--gei-teal);
+  --bs-btn-hover-bg: var(--gei-teal);
+  --bs-btn-hover-border-color: var(--gei-teal);
+  --bs-btn-active-bg: var(--gei-navy);
+  --bs-btn-active-border-color: var(--gei-navy);
+  --bs-btn-disabled-color: var(--gei-teal);
+  --bs-btn-disabled-border-color: var(--gei-teal);
+}
+.form-control:focus,
+.form-select:focus {
+  border-color: var(--gei-teal);
+  box-shadow: 0 0 0 0.25rem rgba(0, 115, 144, 0.25);
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+.navbar-brand {
+  font-family: 'Fjalla One', 'Source Sans 3', sans-serif;
+  font-weight: 400;
+  letter-spacing: 0.02em;
+}
+
+.navbar.bg-primary {
+  border-bottom: 4px solid var(--gei-gold);
+}
+
+.card {
+  border-color: #e3ded3;
+}
+.card-header {
+  background: var(--gei-navy);
+  color: #fff;
+  font-family: 'Fjalla One', 'Source Sans 3', sans-serif;
+  font-weight: 400 !important;
+  letter-spacing: 0.03em;
+}
+
+.table-primary {
+  --bs-table-bg: var(--bs-primary-bg-subtle);
+  --bs-table-striped-bg: var(--bs-primary-bg-subtle);
+  --bs-table-color: var(--gei-navy);
+}
+
+td,
+th {
+  font-variant-numeric: tabular-nums;
+}
+
+summary.card-header {
+  cursor: pointer;
+}
