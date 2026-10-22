@@ -127,7 +127,7 @@ export function buildCells(p: PlanInputs, s: StatusInputs, plan: PlanResult, r: 
     [`A${R.rev}`]: t('Revised Target Billable %'),
     [`B${R.rev}`]: { f: `(B${R.origHrs}-B${R.bHrs})/(B${R.rem}-B${R.pplRem}-B${R.holRem})`, v: r.revisedBillablePct, s: S.boldPct },
     [`C${R.rev}`]: { v: s.adjustedBillablePct, s: S.inPct },
-    [`D${R.rev}`]: { f: `((B${R.bHrs}+(B${R.rem}-B${R.pplRem}-B${R.holRem})*C${R.rev})/G3)`, v: r.yearEndBillablePct, s: S.pct },
+    [`D${R.rev}`]: { f: `((B${R.bHrs}+B${R.rem}*C${R.rev})/G3)`, v: r.yearEndBillablePct, s: S.pct },
     [`A${R.wk}`]: t('Revised Target Billable Hours per Week'),
     [`B${R.wk}`]: { f: `B${R.rev}*$G$2`, v: r.revisedBillableHoursPerWeek, s: S.num },
     [`C${R.wk}`]: { f: `C${R.rev}*$G$2`, v: r.adjustedBillableHoursPerWeek, s: S.num },

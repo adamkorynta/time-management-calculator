@@ -76,6 +76,12 @@ D36 = 70.24%.
 
 \* 40 h column: `(hrs/yr / 52) / 5`. The 30–39 h "hrs/day" values are hard-coded in the sheet.
 
+## Deliberate deviation from the workbook
+- **D36 (Revised year-end billable %)** is `(B26 + (B30 − B33 − B34) × C36) / G3` in the workbook, i.e. the what-if % applies to
+  the workable hours only. The app (and its .xlsx export) uses `(B26 + B30 × C36) / G3`: the what-if % applies to **all** remaining
+  hours, ignoring planned PPL/holidays, and shows a warning with the hours of planned time off it would consume when it exceeds
+  `workable ÷ remaining`. With the workbook defaults this gives 74.86% instead of 70.24%. The revised-target formula (B36) is unchanged.
+
 ## Workbook quirks (preserved or fixed in the app)
 - Instruction #4 mentions D5–D8, but the editable percentages are actually D6–D9 (D5 is derived from B5). App labels fields by name.
 - B20–B23 (YTD PPL/Admin/BD/Non-billable) are inputs that feed nothing. App keeps them as reference and warns if they don't reconcile.

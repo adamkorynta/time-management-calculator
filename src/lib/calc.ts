@@ -165,8 +165,15 @@ export interface RemainingResult {
   adjustedBillableHoursPerWeek: number // C37
   adjustedNonBillablePct: number // C38
   adjustedNonBillableHoursPerWeek: number // C39
-  /** D36: full-year billable % if you bill the adjusted % for the remaining workable hours. */
+  /**
+   * D36, changed: full-year billable % if you bill the what-if % of ALL remaining hours (planned PPL and
+   * holidays are not carved out first; the workbook applied it to the workable hours only).
+   */
   yearEndBillablePct: number | null
+  /** Hours the what-if asks you to bill beyond the workable hours, i.e. planned PPL/holiday you would have to give up. */
+  whatIfLeaveConflictHours: number
+  /** Highest what-if % that still leaves your planned PPL and holidays untouched (workable ÷ hours remaining). */
+  whatIfMaxPctKeepingLeave: number | null
   /** Calendar weeks left in the as-of year (null when the date is invalid). */
   weeksRemaining: number | null
   pace: PaceStatus
@@ -237,7 +244,9 @@ export function computeRemaining(p: PlanInputs, s: StatusInputs): RemainingResul
     adjustedBillableHoursPerWeek: s.adjustedBillablePct * p.hoursPerWeek,
     adjustedNonBillablePct: 1 - s.adjustedBillablePct,
     adjustedNonBillableHoursPerWeek: (1 - s.adjustedBillablePct) * p.hoursPerWeek,
-    yearEndBillablePct: div(ytdBillableHours + workable * s.adjustedBillablePct, g3),
+    yearEndBillablePct: div(ytdBillableHours + hoursRemaining * s.adjustedBillablePct, g3),
+    whatIfLeaveConflictHours: Math.max(0, hoursRemaining * s.adjustedBillablePct - Math.max(workable, 0)),
+    whatIfMaxPctKeepingLeave: hoursRemaining > 0 ? Math.max(workable, 0) / hoursRemaining : null,
     weeksRemaining: timing?.weeksRemaining ?? null,
     pace: paceStatus(paceDeltaPct),
     paceDeltaPct,

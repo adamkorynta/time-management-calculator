@@ -118,8 +118,14 @@ export default function TargetsCard({ plan, status, result, errors, onChange }: 
             </tbody>
           </table>
         </div>
+        {r.whatIfLeaveConflictHours > 0.005 && (
+          <div className="alert alert-warning py-2" role="status">
+            <strong>What-if exceeds your planned time off.</strong> At {fmtPct(status.adjustedBillablePct, 1)} you would bill {fmtHours(status.adjustedBillablePct * r.hoursRemaining)} of the {fmtHours(r.hoursRemaining)} hours remaining, which is{' '}
+            {fmtHours(r.whatIfLeaveConflictHours)} h more than the {fmtHours(r.workableHoursRemaining)} h left after your planned PPL ({fmtHours(status.plannedPplRemaining)} h) and holidays ({fmtHours(status.plannedHolidayRemaining)} h). The highest what-if that keeps that time off is {fmtPct(r.whatIfMaxPctKeepingLeave, 1)}.
+          </div>
+        )}
         <p className="form-text mb-0">
-          Revised % = (original billable hours − YTD billable hours) ÷ (hours remaining − est. PPL − est. holiday). Weekly hours use your {plan.hoursPerWeek}-hour schedule.
+          Revised % = (original billable hours − YTD billable hours) ÷ (hours remaining − est. PPL − est. holiday). The what-if applies to all remaining hours (planned PPL and holidays are not removed first) and warns if it would eat into them. Weekly hours use your {plan.hoursPerWeek}-hour schedule.
         </p>
       </div>
     </div>

@@ -44,7 +44,8 @@ describe('computeRemaining (workbook defaults)', () => {
   it('matches adjusted what-if column', () => {
     expect(r.adjustedBillableHoursPerWeek).toBeCloseTo(32, 9)
     expect(r.adjustedNonBillableHoursPerWeek).toBeCloseTo(8, 9)
-    expect(r.yearEndBillablePct).toBeCloseTo(0.70244230769230764, 12)
+    // Deliberately differs from the workbook's D36 (0.70244, workable hours only): what-if applies to all remaining hours.
+    expect(r.yearEndBillablePct).toBeCloseTo((181.08 + 0.8 * 1720) / 2080, 12)
   })
 })
 
@@ -115,5 +116,24 @@ describe('PPL remaining note', () => {
   it('goes negative when more PPL was used than accrued', () => {
     const r = computeRemaining({ ...DEFAULT_PLAN, pplHoursPerYear: 100 }, { ...DEFAULT_STATUS, ytdTotalHours: 1000, ytdPplPct: 0.2 })
     expect(r.pplUnusedHours).toBeCloseTo(-100, 9)
+  })
+})
+
+describe('what-if ignores planned PPL/holidays but warns when it conflicts', () => {
+  const plan = { ...DEFAULT_PLAN, billablePct: 0.75 }
+  const status = { ...DEFAULT_STATUS, ytdTotalHours: 1680, ytdBillablePct: 0.711, plannedPplRemaining: 80, plannedHolidayRemaining: 16 }
+
+  it('applies the what-if % to all remaining hours', () => {
+    const r = computeRemaining(plan, { ...status, adjustedBillablePct: 1 })
+    expect(r.yearEndBillablePct).toBeCloseTo((0.711 * 1680 + 400) / 2080, 12) // 100% of all 400 h, not just the 304 workable
+  })
+  it('flags the hours of planned time off a high what-if would consume', () => {
+    const r = computeRemaining(plan, { ...status, adjustedBillablePct: 0.9 })
+    expect(r.whatIfLeaveConflictHours).toBeCloseTo(0.9 * 400 - 304, 9) // 56 h
+    expect(r.whatIfMaxPctKeepingLeave).toBeCloseTo(0.76, 12)
+  })
+  it('does not warn within the leave-respecting limit', () => {
+    expect(computeRemaining(plan, { ...status, adjustedBillablePct: 0.76 }).whatIfLeaveConflictHours).toBeCloseTo(0, 9)
+    expect(computeRemaining(plan, { ...status, adjustedBillablePct: 0.5 }).whatIfLeaveConflictHours).toBe(0)
   })
 })
