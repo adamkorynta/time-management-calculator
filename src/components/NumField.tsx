@@ -28,14 +28,16 @@ export default function NumField({ label, value, onChange, unit = 'none', min = 
 
   const suffix = unit === 'pct' ? '%' : unit === 'h' ? 'h' : null
   return (
-    <div className="mb-3">
-      <label htmlFor={id} className="form-label mb-1">
+    <div className="mb-3 h-100 d-flex flex-column">
+      <label htmlFor={id} className="form-label mb-1 flex-grow-1 d-flex align-items-end">
+        <span>
         {label}
         {tip && (
           <span className="tip ms-1" title={tip} tabIndex={0} role="img" aria-label={`Help: ${tip}`}>
             ⓘ
           </span>
         )}
+        </span>
       </label>
       <div className="input-group has-validation">
         <input

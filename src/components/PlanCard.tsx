@@ -48,7 +48,7 @@ export default function PlanCard({ plan, result, errors, tierIdx, onTierChange, 
         <h6 className="mt-4">Time allocation</h6>
         <div className="row">
           <div className="col-sm-6">
-            <NumField label="Company/Office/Group Meetings (h/week)" unit="h" error={errors.meetingsHoursPerWeek} tip="Recurring company, office and group meeting time, in hours per week (the only allocation entered as hours)." value={plan.meetingsHoursPerWeek} onChange={(v) => onChange({ meetingsHoursPerWeek: v })} />
+            <NumField label="Meetings (h/week)" unit="h" error={errors.meetingsHoursPerWeek} tip="Recurring company, office and group meeting time, in hours per week (the only allocation entered as hours)." value={plan.meetingsHoursPerWeek} onChange={(v) => onChange({ meetingsHoursPerWeek: v })} />
           </div>
           <div className="col-sm-6">
             <NumField label="Project Billable" unit="pct" error={errors.billablePct} tip="Your target share of the annual schedule spent on billable project work, agreed with your supervisor." max={100} value={plan.billablePct} onChange={(v) => onChange({ billablePct: v })} />
