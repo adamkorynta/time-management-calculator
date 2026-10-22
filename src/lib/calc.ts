@@ -11,14 +11,40 @@ export const WEEKS_PER_YEAR = 52
 /** D3: =(7*8)/G3 — 7 holidays of 8 hours, fixed. */
 export const HOLIDAY_HOURS_PER_YEAR = 7 * 8
 
+/** Which column the user last typed into; that value is kept when the schedule changes. */
+export type OverheadBasis = 'week' | 'year' | 'pct'
+
+/**
+ * A user-editable non-billable category. The user can enter hours/week, hours/year or % and the other
+ * two columns are derived. Workbook rows B5 (meetings, hours/week) and D7:D9 (percentages) map to this.
+ */
+export interface OverheadRow {
+  id: string
+  label: string
+  basis: OverheadBasis
+  /** hours/week, hours/year, or a 0–1 share, depending on basis */
+  value: number
+}
+
 export interface PlanInputs {
   hoursPerWeek: number // G2
   pplHoursPerYear: number // G4
-  meetingsHoursPerWeek: number // B5
   billablePct: number // D6 (0–1)
-  businessDevPct: number // D7
-  profDevPct: number // D8
-  practiceDevPct: number // D9
+  overhead: OverheadRow[] // B5, D7:D9 plus user rows
+}
+
+/** Resolve an overhead row to hours/year for a given annual schedule. */
+export function overheadHoursPerYear(r: OverheadRow, annualHours: number): number {
+  if (r.basis === 'week') return r.value * WEEKS_PER_YEAR
+  if (r.basis === 'pct') return r.value * annualHours
+  return r.value
+}
+
+/** New hours/year → the row value to store for a given basis. */
+export function overheadValueFromYear(basis: OverheadBasis, hoursPerYear: number, annualHours: number): number {
+  if (basis === 'week') return hoursPerYear / WEEKS_PER_YEAR
+  if (basis === 'pct') return annualHours > 0 ? hoursPerYear / annualHours : 0
+  return hoursPerYear
 }
 
 export interface StatusInputs {
@@ -41,8 +67,11 @@ export interface StatusInputs {
   adjustedBillablePct: number // C36 (what-if, 0–1)
 }
 
+export type AllocationGroup = 'fixed' | 'billable' | 'overhead'
+
 export interface AllocationRow {
   key: string
+  group: AllocationGroup
   label: string
   hoursPerWeek: number
   hoursPerYear: number
@@ -73,29 +102,20 @@ const div = (a: number, b: number): number | null => (b === 0 || !Number.isFinit
 
 export function computePlan(p: PlanInputs): PlanResult {
   const g3 = p.hoursPerWeek * WEEKS_PER_YEAR
-  const fromYear = (key: string, label: string, hoursPerYear: number): AllocationRow => ({
+  const fromYear = (key: string, group: AllocationGroup, label: string, hoursPerYear: number): AllocationRow => ({
     key,
+    group,
     label,
     hoursPerWeek: hoursPerYear / WEEKS_PER_YEAR,
     hoursPerYear,
     pct: div(hoursPerYear, g3) ?? 0,
   })
-  const fromPct = (key: string, label: string, share: number): AllocationRow => ({
-    key,
-    label,
-    hoursPerWeek: (share * g3) / WEEKS_PER_YEAR,
-    hoursPerYear: share * g3,
-    pct: share,
-  })
 
   const rows: AllocationRow[] = [
-    fromYear('holiday', 'Holiday (7 days/year)', HOLIDAY_HOURS_PER_YEAR),
-    fromYear('ppl', 'PPL', p.pplHoursPerYear),
-    fromYear('meetings', 'Company/Office/Group Meetings', p.meetingsHoursPerWeek * WEEKS_PER_YEAR),
-    fromPct('billable', 'Project Billable', p.billablePct),
-    fromPct('bd', 'Business Development', p.businessDevPct),
-    fromPct('profdev', 'Professional Development/Training', p.profDevPct),
-    fromPct('practice', 'Practice Development/Leadership', p.practiceDevPct),
+    fromYear('holiday', 'fixed', 'Holiday (7 days/year)', HOLIDAY_HOURS_PER_YEAR),
+    fromYear('ppl', 'fixed', 'PPL', p.pplHoursPerYear),
+    fromYear('billable', 'billable', 'Project Billable', p.billablePct * g3),
+    ...p.overhead.map((r) => fromYear(r.id, 'overhead', r.label, overheadHoursPerYear(r, g3))),
   ]
   const total = rows.reduce(
     (t, r) => ({
@@ -232,14 +252,21 @@ export function computeRemaining(p: PlanInputs, s: StatusInputs): RemainingResul
 }
 
 /** Spreadsheet defaults (the values saved in the workbook). */
+/** Workbook rows plus the two administration rows (zero by default so totals match the workbook). */
+export const DEFAULT_OVERHEAD: OverheadRow[] = [
+  { id: 'meetings', label: 'Company/Office/Group Meetings', basis: 'week', value: 1 },
+  { id: 'bd', label: 'Business Development', basis: 'pct', value: 0 },
+  { id: 'profdev', label: 'Professional Development/Training', basis: 'pct', value: 0.03 },
+  { id: 'practice', label: 'Practice Development/Leadership', basis: 'pct', value: 0.01 },
+  { id: 'admin-computer', label: 'Administration - Computer', basis: 'pct', value: 0 },
+  { id: 'admin-general', label: 'General Administration', basis: 'pct', value: 0 },
+]
+
 export const DEFAULT_PLAN: PlanInputs = {
   hoursPerWeek: 40,
   pplHoursPerYear: 220,
-  meetingsHoursPerWeek: 1,
   billablePct: 0.8,
-  businessDevPct: 0,
-  profDevPct: 0.03,
-  practiceDevPct: 0.01,
+  overhead: DEFAULT_OVERHEAD,
 }
 
 export const DEFAULT_STATUS: StatusInputs = {

@@ -4,6 +4,7 @@ Ordered by value ÷ effort. Charting suggestion: [Recharts](https://recharts.org
 
 > **Implemented:** #1 (allocation donut), #3 (billable gauge), #10 (auto as-of date, weeks remaining, pace badge),
 > #13 (share link, print/PDF, generated .xlsx), #14 (inline validation, tooltips, "target not achievable").
+> Also done: editable non-billable table (any column, add/remove rows, billable separated); summary donut shows PPL+Holiday / Billable / Business Development / Other overhead.
 > Pace bands: within 5 points of target = on pace, 5–10 under = at risk, >10 under = behind.
 
 ## Charts

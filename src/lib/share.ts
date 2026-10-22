@@ -1,4 +1,5 @@
-import { DEFAULT_PLAN, DEFAULT_STATUS } from './calc'
+import { DEFAULT_STATUS } from './calc'
+import { normalizePlan } from './plan'
 import type { PlanInputs, StatusInputs } from './calc'
 
 export interface SharedState {
@@ -42,7 +43,7 @@ export function decodeShare(hash: string): SharedState | null {
     const raw = JSON.parse(fromB64Url(m[1]))
     const tier = Number(raw?.tierIdx)
     return {
-      plan: pick(DEFAULT_PLAN, raw?.plan),
+      plan: normalizePlan(raw?.plan),
       status: pick(DEFAULT_STATUS, raw?.status),
       tierIdx: Number.isInteger(tier) && tier >= 0 && tier < 5 ? tier : 3,
     }

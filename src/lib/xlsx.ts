@@ -64,9 +64,26 @@ const STYLES = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><styleShe
 <cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles>
 </styleSheet>`
 
+/** Row numbers of the generated sheet, derived from the number of overhead rows. */
+export function sheetLayout(overheadCount: number) {
+  const billable = 5
+  const firstOverhead = 6
+  const total = firstOverhead + overheadCount
+  const asOf = total + 3
+  return { billable, firstOverhead, total, asOf }
+}
+
 export function buildCells(p: PlanInputs, s: StatusInputs, plan: PlanResult, r: RemainingResult): Record<string, Cell> {
+  const L = sheetLayout(p.overhead.length)
+  const a = L.asOf
   const row = (k: string) => plan.rows.find((x) => x.key === k)!
   const t = (v: string, style: number = S.text): Cell => ({ v, s: style })
+  const R = {
+    ppl: a + 1, admin: a + 2, bd: a + 3, nbPct: a + 4, nbHrs: a + 5, bPct: a + 6, bHrs: a + 7, tot: a + 8,
+    title: a + 10, rem: a + 11, origPct: a + 12, origHrs: a + 13, pplRem: a + 14, holRem: a + 15,
+    hdr: a + 16, rev: a + 17, wk: a + 18, nbRevPct: a + 19, nbWk: a + 20,
+  }
+  const B = L.billable
   const c: Record<string, Cell> = {
     A1: t('Annual Plan Time Management Calculator', S.title),
     F1: t('Schedule', S.bold),
@@ -82,58 +99,56 @@ export function buildCells(p: PlanInputs, s: StatusInputs, plan: PlanResult, r: 
     B4: { f: 'C4/52', v: row('ppl').hoursPerWeek, s: S.num },
     C4: { f: 'G4', v: p.pplHoursPerYear, s: S.num },
     D4: { f: 'G4/G3', v: row('ppl').pct, s: S.pct },
-    A5: t('Company/Office/Group Meetings'),
-    B5: { v: p.meetingsHoursPerWeek, s: S.inNum },
-    C5: { f: 'B5*52', v: row('meetings').hoursPerYear, s: S.num },
-    D5: { f: 'C5/G3', v: row('meetings').pct, s: S.pct },
-    A10: t('Total', S.bold),
-    B10: { f: 'SUM(B3:B9)', v: plan.total.hoursPerWeek, s: S.num },
-    C10: { f: 'SUM(C3:C9)', v: plan.total.hoursPerYear, s: S.num },
-    D10: { f: 'SUM(D3:D9)', v: plan.total.pct, s: S.pct },
-    A19: t('Status update as of '),
-    B19: { v: excelSerial(s.asOf), s: S.inDate },
-    A20: t('YTD PPL'), B20: { v: s.ytdPplPct, s: S.inPct },
-    A21: t('YTD Admin'), B21: { v: s.ytdAdminPct, s: S.inPct },
-    A22: t('YTD BD'), B22: { v: s.ytdBdPct, s: S.inPct },
-    A23: t('YTD Non-billable Total'), B23: { f: '1-B25', v: r.ytdNonBillablePct, s: S.pct },
-    A24: t('YTD Non-billable Hours'), B24: { f: 'B27-B26', v: r.ytdNonBillableHours, s: S.num },
-    A25: t('YTD Billable Total'), B25: { v: s.ytdBillablePct, s: S.inPct },
-    A26: t('YTD Billable Hours'), B26: { f: 'B25*B27', v: r.ytdBillableHours, s: S.num },
-    A27: t('YTD Total Hours'), B27: { v: s.ytdTotalHours, s: S.inNum },
-    A29: t('Revised Targets for the Remainder of the Year', S.bold),
-    A30: t('Total Hours Remaining'), B30: { f: 'G3-B27', v: r.hoursRemaining, s: S.num },
-    A31: t('Original Target Billable %'), B31: { f: 'D6', v: r.originalBillablePct, s: S.pct },
-    A32: t('Original Target Billable Hours'), B32: { f: 'B31*G3', v: r.originalBillableHours, s: S.num },
-    A33: t('Estimated PPL Hours for Remainder of the Year'), B33: { v: s.plannedPplRemaining, s: S.inNum },
-    A34: t('Estimated Holiday Hours for Remainder of the Year'), B34: { v: s.plannedHolidayRemaining, s: S.inNum },
-    C35: t('Adjusted', S.bold), D35: t('Revised Year-end Target', S.bold),
-    A36: t('Revised Target Billable %'),
-    B36: { f: '(B32-B26)/(B30-B33-B34)', v: r.revisedBillablePct, s: S.boldPct },
-    C36: { v: s.adjustedBillablePct, s: S.inPct },
-    D36: { f: '((B26+(B30-B33-B34)*C36)/G3)', v: r.yearEndBillablePct, s: S.pct },
-    A37: t('Revised Target Billable Hours per Week'),
-    B37: { f: 'B36*$G$2', v: r.revisedBillableHoursPerWeek, s: S.num },
-    C37: { f: 'C36*$G$2', v: r.adjustedBillableHoursPerWeek, s: S.num },
-    A38: t('Revised Target Non-billable %'),
-    B38: { f: '100%-B36', v: r.revisedNonBillablePct, s: S.pct },
-    C38: { f: '100%-C36', v: r.adjustedNonBillablePct, s: S.pct },
-    A39: t('Revised Target Non-billable Hours per Week'),
-    B39: { f: 'B38*$G$2', v: r.revisedNonBillableHoursPerWeek, s: S.num },
-    C39: { f: 'C38*$G$2', v: r.adjustedNonBillableHoursPerWeek, s: S.num },
-    A41: t(`Exported from the web calculator on ${new Date().toLocaleDateString('en-CA')}. Green cells are inputs.`),
+    [`A${B}`]: t('Project Billable'),
+    [`B${B}`]: { f: `C${B}/52`, v: row('billable').hoursPerWeek, s: S.num },
+    [`C${B}`]: { f: `D${B}*$G$3`, v: row('billable').hoursPerYear, s: S.num },
+    [`D${B}`]: { v: p.billablePct, s: S.inPct },
+    [`A${L.total}`]: t('Total', S.bold),
+    [`B${L.total}`]: { f: `SUM(B3:B${L.total - 1})`, v: plan.total.hoursPerWeek, s: S.num },
+    [`C${L.total}`]: { f: `SUM(C3:C${L.total - 1})`, v: plan.total.hoursPerYear, s: S.num },
+    [`D${L.total}`]: { f: `SUM(D3:D${L.total - 1})`, v: plan.total.pct, s: S.pct },
+    [`A${a}`]: t('Status update as of '),
+    [`B${a}`]: { v: excelSerial(s.asOf), s: S.inDate },
+    [`A${R.ppl}`]: t('YTD PPL'), [`B${R.ppl}`]: { v: s.ytdPplPct, s: S.inPct },
+    [`A${R.admin}`]: t('YTD Admin'), [`B${R.admin}`]: { v: s.ytdAdminPct, s: S.inPct },
+    [`A${R.bd}`]: t('YTD BD'), [`B${R.bd}`]: { v: s.ytdBdPct, s: S.inPct },
+    [`A${R.nbPct}`]: t('YTD Non-billable Total'), [`B${R.nbPct}`]: { f: `1-B${R.bPct}`, v: r.ytdNonBillablePct, s: S.pct },
+    [`A${R.nbHrs}`]: t('YTD Non-billable Hours'), [`B${R.nbHrs}`]: { f: `B${R.tot}-B${R.bHrs}`, v: r.ytdNonBillableHours, s: S.num },
+    [`A${R.bPct}`]: t('YTD Billable Total'), [`B${R.bPct}`]: { v: s.ytdBillablePct, s: S.inPct },
+    [`A${R.bHrs}`]: t('YTD Billable Hours'), [`B${R.bHrs}`]: { f: `B${R.bPct}*B${R.tot}`, v: r.ytdBillableHours, s: S.num },
+    [`A${R.tot}`]: t('YTD Total Hours'), [`B${R.tot}`]: { v: s.ytdTotalHours, s: S.inNum },
+    [`A${R.title}`]: t('Revised Targets for the Remainder of the Year', S.bold),
+    [`A${R.rem}`]: t('Total Hours Remaining'), [`B${R.rem}`]: { f: `G3-B${R.tot}`, v: r.hoursRemaining, s: S.num },
+    [`A${R.origPct}`]: t('Original Target Billable %'), [`B${R.origPct}`]: { f: `D${B}`, v: r.originalBillablePct, s: S.pct },
+    [`A${R.origHrs}`]: t('Original Target Billable Hours'), [`B${R.origHrs}`]: { f: `B${R.origPct}*G3`, v: r.originalBillableHours, s: S.num },
+    [`A${R.pplRem}`]: t('Estimated PPL Hours for Remainder of the Year'), [`B${R.pplRem}`]: { v: s.plannedPplRemaining, s: S.inNum },
+    [`A${R.holRem}`]: t('Estimated Holiday Hours for Remainder of the Year'), [`B${R.holRem}`]: { v: s.plannedHolidayRemaining, s: S.inNum },
+    [`C${R.hdr}`]: t('Adjusted', S.bold), [`D${R.hdr}`]: t('Revised Year-end Target', S.bold),
+    [`A${R.rev}`]: t('Revised Target Billable %'),
+    [`B${R.rev}`]: { f: `(B${R.origHrs}-B${R.bHrs})/(B${R.rem}-B${R.pplRem}-B${R.holRem})`, v: r.revisedBillablePct, s: S.boldPct },
+    [`C${R.rev}`]: { v: s.adjustedBillablePct, s: S.inPct },
+    [`D${R.rev}`]: { f: `((B${R.bHrs}+(B${R.rem}-B${R.pplRem}-B${R.holRem})*C${R.rev})/G3)`, v: r.yearEndBillablePct, s: S.pct },
+    [`A${R.wk}`]: t('Revised Target Billable Hours per Week'),
+    [`B${R.wk}`]: { f: `B${R.rev}*$G$2`, v: r.revisedBillableHoursPerWeek, s: S.num },
+    [`C${R.wk}`]: { f: `C${R.rev}*$G$2`, v: r.adjustedBillableHoursPerWeek, s: S.num },
+    [`A${R.nbRevPct}`]: t('Revised Target Non-billable %'),
+    [`B${R.nbRevPct}`]: { f: `100%-B${R.rev}`, v: r.revisedNonBillablePct, s: S.pct },
+    [`C${R.nbRevPct}`]: { f: `100%-C${R.rev}`, v: r.adjustedNonBillablePct, s: S.pct },
+    [`A${R.nbWk}`]: t('Revised Target Non-billable Hours per Week'),
+    [`B${R.nbWk}`]: { f: `B${R.nbRevPct}*$G$2`, v: r.revisedNonBillableHoursPerWeek, s: S.num },
+    [`C${R.nbWk}`]: { f: `C${R.nbRevPct}*$G$2`, v: r.adjustedNonBillableHoursPerWeek, s: S.num },
+    [`A${R.nbWk + 2}`]: t(`Exported from the web calculator on ${new Date().toLocaleDateString('en-CA')}. Green cells are inputs.`),
   }
-  const pctRows: [number, string, string, number][] = [
-    [6, 'Project Billable', 'billable', p.billablePct],
-    [7, 'Business Development', 'bd', p.businessDevPct],
-    [8, 'Professional Development/Training', 'profdev', p.profDevPct],
-    [9, 'Practice Development/Leadership', 'practice', p.practiceDevPct],
-  ]
-  for (const [n, label, key, share] of pctRows) {
-    c[`A${n}`] = t(label)
-    c[`B${n}`] = { f: `C${n}/52`, v: row(key).hoursPerWeek, s: S.num }
-    c[`C${n}`] = { f: `D${n}*$G$3`, v: row(key).hoursPerYear, s: S.num }
-    c[`D${n}`] = { v: share, s: S.inPct }
-  }
+
+  // Overhead rows: whichever column the user entered is the input; the other two are formulas.
+  p.overhead.forEach((o, i) => {
+    const n = L.firstOverhead + i
+    const pr = row(o.id)
+    c[`A${n}`] = t(o.label)
+    c[`B${n}`] = o.basis === 'week' ? { v: o.value, s: S.inNum } : { f: `C${n}/52`, v: pr.hoursPerWeek, s: S.num }
+    c[`C${n}`] = o.basis === 'year' ? { v: o.value, s: S.inNum } : { f: o.basis === 'week' ? `B${n}*52` : `D${n}*$G$3`, v: pr.hoursPerYear, s: S.num }
+    c[`D${n}`] = o.basis === 'pct' ? { v: o.value, s: S.inPct } : { f: `C${n}/$G$3`, v: pr.pct, s: S.pct }
+  })
   return c
 }
 

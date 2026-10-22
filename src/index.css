@@ -198,3 +198,11 @@ summary.card-header {
   vertical-align: -0.1rem;
   border: 1px solid rgba(0, 0, 0, 0.15);
 }
+
+/* Overhead table: underline the column the user last typed in */
+.cell-source {
+  border-bottom: 2px solid var(--gei-teal);
+}
+.overhead-table .form-control-sm {
+  min-width: 4.5rem;
+}

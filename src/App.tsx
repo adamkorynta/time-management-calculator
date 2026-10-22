@@ -9,6 +9,7 @@ import { computePlan, computeRemaining, DEFAULT_PLAN, DEFAULT_STATUS, resolveSta
 import type { PlanInputs, StatusInputs } from './lib/calc'
 import { PPL_TABLE } from './lib/pplTable'
 import { decodeShare, shareUrl } from './lib/share'
+import { normalizePlan, readLegacyPlan } from './lib/plan'
 import { usePersistentState } from './lib/usePersistentState'
 import { validateInputs } from './lib/validate'
 import { buildXlsx, downloadBlob } from './lib/xlsx'
@@ -18,7 +19,7 @@ const shared = decodeShare(window.location.hash)
 if (shared) window.history.replaceState(null, '', window.location.pathname + window.location.search)
 
 export default function App() {
-  const [plan, setPlan] = usePersistentState<PlanInputs>('tmc.plan.v1', DEFAULT_PLAN, shared?.plan)
+  const [plan, setPlan] = usePersistentState<PlanInputs>('tmc.plan.v2', DEFAULT_PLAN, shared?.plan, { normalize: normalizePlan, legacy: readLegacyPlan('tmc.plan.v1') })
   const [status, setStatus] = usePersistentState<StatusInputs>('tmc.status.v1', DEFAULT_STATUS, shared?.status)
   const [{ tierIdx }, setUi] = usePersistentState('tmc.ui.v1', { tierIdx: 3 }, shared ? { tierIdx: shared.tierIdx } : null)
   const [notice, setNotice] = useState<string | null>(shared ? 'Loaded inputs from a shared link. They are now saved in this browser.' : null)
