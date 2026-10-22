@@ -24,7 +24,8 @@ export default function NumField({ label, value, onChange, unit = 'none', min = 
   const scale = unit === 'pct' ? 100 : 1
   // Text draft exists only while editing, so typing "0." or clearing the box doesn't fight the model.
   const [draft, setDraft] = useState<string | null>(null)
-  const shown = draft ?? round(value * scale)
+  // Only show the draft while it still matches the model, so Reset or other edits can't leave stale text.
+  const shown = draft !== null && Math.abs(Number(draft) / scale - value) < 1e-9 ? draft : round(value * scale)
 
   const suffix = unit === 'pct' ? '%' : unit === 'h' ? 'h' : unit === 'days' ? 'days' : null
   return (

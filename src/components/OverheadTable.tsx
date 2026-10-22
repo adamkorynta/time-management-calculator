@@ -4,6 +4,9 @@ import { fmtHours, fmtPct } from '../lib/format'
 import { newRowId } from '../lib/plan'
 import type { FieldErrors } from '../lib/validate'
 
+/** A typed draft is only shown while it still matches the model (so Reset or other edits can't leave stale text). */
+const draftIsCurrent = (draft: string | null, value: number, scale: number) => draft !== null && Math.abs(Number(draft) / scale - value) < 1e-9
+
 /** Derived values show 2 decimals; the column the user typed in keeps full precision. */
 const round = (n: number, digits: number) => String(Math.round(n * 10 ** digits) / 10 ** digits)
 
@@ -29,7 +32,7 @@ function Cell({ label, value, scale = 1, source, invalid, onCommit }: CellProps)
       aria-label={label}
       className={`form-control form-control-sm text-end ${invalid ? 'is-invalid' : ''} ${source ? 'cell-source' : ''}`}
       title={source ? 'You entered this column; it stays fixed if your schedule changes.' : undefined}
-      value={draft ?? round(value * scale, source ? 4 : 2)}
+      value={draftIsCurrent(draft, value, scale) ? draft! : round(value * scale, source ? 4 : 2)}
       onBlur={() => setDraft(null)}
       onChange={(e) => {
         setDraft(e.target.value)

@@ -60,23 +60,23 @@ export default function StatusCard({ status, effective, hoursPerWeek, result, er
               onChange={(v) => onChange({ ytdTotalHours: v })}
               help={status.ytdHoursAuto && workWeeks !== null ? `${workWeeks} work weeks × ${hoursPerWeek} h` : undefined}
             />
-            <div className="form-check mb-3">
-              <input
-                id="ytd-auto"
-                className="form-check-input"
-                type="checkbox"
-                checked={status.ytdHoursAuto}
-                onChange={(e) => onChange({ ytdHoursAuto: e.target.checked, ytdTotalHours: e.target.checked ? status.ytdTotalHours : effective.ytdTotalHours })}
-              />
-              <label htmlFor="ytd-auto" className="form-check-label small">
-                Estimate from date &amp; schedule
-              </label>
-            </div>
           </div>
           <div className="col-sm-6">
             <NumField label="YTD Billable Total" unit="pct" max={100} error={errors.ytdBillablePct} tip="Year-to-date billable ('Chargeable') % from your utilization report." value={status.ytdBillablePct} onChange={(v) => onChange({ ytdBillablePct: v })} help={`${fmtHours(result.ytdBillableHours)} billable hours`} />
           </div>
         </div>
+    <div className="form-check mb-2">
+      <input
+        id="ytd-auto"
+        className="form-check-input"
+        type="checkbox"
+        checked={status.ytdHoursAuto}
+        onChange={(e) => onChange({ ytdHoursAuto: e.target.checked, ytdTotalHours: e.target.checked ? status.ytdTotalHours : effective.ytdTotalHours })}
+      />
+      <label htmlFor="ytd-auto" className="form-check-label small">
+        Estimate from date &amp; schedule
+      </label>
+    </div>
         <p className="mb-3">
           <span className="text-body-secondary">YTD Non-billable Total:</span> <strong>{fmtPct(result.ytdNonBillablePct)}</strong>{' '}
           <span className="text-body-secondary">({fmtHours(result.ytdNonBillableHours)} h, calculated as 100% − billable)</span>
