@@ -47,6 +47,17 @@ export interface PlanResult {
   unallocatedHours: number
 }
 
+/** Allocations within ±0.5% of the annual schedule count as balanced (exact 100% is impractical to hit). */
+export const ALLOCATION_TOLERANCE = 0.005
+
+export type AllocationStatus = 'balanced' | 'over' | 'under'
+
+export function allocationStatus(plan: PlanResult): AllocationStatus {
+  if (plan.hoursPerYear <= 0) return 'balanced'
+  const gap = plan.unallocatedHours / plan.hoursPerYear
+  return Math.abs(gap) <= ALLOCATION_TOLERANCE ? 'balanced' : gap < 0 ? 'over' : 'under'
+}
+
 /** Divide, returning null instead of Infinity/NaN. */
 const div = (a: number, b: number): number | null => (b === 0 || !Number.isFinite(a / b) ? null : a / b)
 

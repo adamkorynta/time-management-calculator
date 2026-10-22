@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { computePlan, computeRemaining, DEFAULT_PLAN, DEFAULT_STATUS } from './calc'
+import { allocationStatus, computePlan, computeRemaining, DEFAULT_PLAN, DEFAULT_STATUS } from './calc'
 
 // Expected values are the cached results saved in the original workbook.
 describe('computePlan (workbook defaults)', () => {
@@ -57,5 +57,17 @@ describe('edge cases', () => {
   it('handles zero schedule without NaN', () => {
     const p = computePlan({ ...DEFAULT_PLAN, hoursPerWeek: 0 })
     expect(Number.isFinite(p.total.pct)).toBe(true)
+  })
+})
+
+describe('allocationStatus', () => {
+  const at = (extraPct: number) => allocationStatus(computePlan({ ...DEFAULT_PLAN, billablePct: 0.8 + 0.0023 + extraPct }))
+  it('treats small gaps as balanced', () => {
+    expect(at(0.0006)).toBe('balanced') // ~100.06%
+    expect(at(-0.004)).toBe('balanced')
+  })
+  it('flags real gaps', () => {
+    expect(at(0.02)).toBe('over')
+    expect(at(-0.05)).toBe('under')
   })
 })

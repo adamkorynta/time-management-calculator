@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { usePersistentState } from '../lib/usePersistentState'
 import { PPL_TABLE, pplForTier } from '../lib/pplTable'
+import { allocationStatus } from '../lib/calc'
 import type { PlanInputs, PlanResult } from '../lib/calc'
 import { fmtHours, fmtPct } from '../lib/format'
 import NumField from './NumField'
@@ -11,9 +12,9 @@ interface Props {
 }
 
 export default function PlanCard({ plan, result, onChange }: Props) {
-  const [tierIdx, setTierIdx] = useState(3)
-  const suggested = pplForTier(PPL_TABLE[tierIdx], plan.hoursPerWeek)
-  const over = result.total.pct > 1.0000001
+  const [{ tierIdx }, setUi] = usePersistentState('tmc.ui.v1', { tierIdx: 3 })
+  const suggested = pplForTier(PPL_TABLE[tierIdx] ?? PPL_TABLE[0], plan.hoursPerWeek)
+  const status = allocationStatus(result)
 
   return (
     <div className="card h-100">
@@ -30,7 +31,7 @@ export default function PlanCard({ plan, result, onChange }: Props) {
 
         <div className="input-group input-group-sm mb-3">
           <span className="input-group-text">Years at GEI + prior credit</span>
-          <select className="form-select" value={tierIdx} onChange={(e) => setTierIdx(Number(e.target.value))} aria-label="Years of service tier">
+          <select className="form-select" value={tierIdx} onChange={(e) => setUi({ tierIdx: Number(e.target.value) })} aria-label="Years of service tier">
             {PPL_TABLE.map((t, i) => (
               <option key={t.label} value={i}>
                 {t.label}
@@ -91,9 +92,13 @@ export default function PlanCard({ plan, result, onChange }: Props) {
             </tfoot>
           </table>
         </div>
-        {Math.abs(result.unallocatedHours) > 0.5 && (
-          <div className={`alert ${over ? 'alert-danger' : 'alert-warning'} py-2 mb-0`} role="status">
-            {over
+        {status === 'balanced' ? (
+          <div className="text-success small" role="status">
+            ✓ Fully allocated (within ±0.5% of {fmtHours(result.hoursPerYear)} h).
+          </div>
+        ) : (
+          <div className={`alert ${status === 'over' ? 'alert-danger' : 'alert-warning'} py-2 mb-0`} role="status">
+            {status === 'over'
               ? `Over-allocated by ${fmtHours(-result.unallocatedHours)} hours/year.`
               : `${fmtHours(result.unallocatedHours)} hours/year (${fmtHours(result.unallocatedHours / 52)} h/week) are not allocated.`}
           </div>
