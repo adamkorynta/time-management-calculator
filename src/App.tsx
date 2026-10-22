@@ -86,7 +86,14 @@ export default function App() {
           </div>
         )}
         <p className="text-body-secondary no-print">
-          Set your weekly schedule and PPL, allocate your time, then enter year-to-date numbers from your utilization report (green boxes) to see the billable target you need for the rest of the year. Inputs are saved in this browser only.
+          Set your weekly schedule and PPL, allocate your time, then enter year-to-date numbers from your utilization report to see the billable target you need for the rest of the year. Inputs are saved in this browser only.{' '}
+          <span className="text-nowrap">
+            <span className="legend-swatch" style={{ background: 'var(--input-bg)' }} /> green = you enter it
+          </span>
+          {' · '}
+          <span className="text-nowrap">
+            <span className="legend-swatch" style={{ background: '#e9ecef' }} /> gray = calculated
+          </span>
         </p>
         <p className="print-only">
           Status as of {asOf} · {plan.hoursPerWeek} h/week

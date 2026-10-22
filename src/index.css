@@ -178,3 +178,23 @@ summary.card-header {
 .help-slot {
   min-height: 1.5rem;
 }
+
+/* Input legend: green = you enter it; gray (disabled/read-only) = calculated or auto-filled. */
+:root {
+  --input-bg: #e3f1e4;
+}
+.form-control:enabled:not(.is-invalid),
+.form-select:enabled {
+  background-color: var(--input-bg);
+}
+.form-control:disabled {
+  background-color: #e9ecef;
+}
+.legend-swatch {
+  display: inline-block;
+  width: 0.9rem;
+  height: 0.9rem;
+  border-radius: 2px;
+  vertical-align: -0.1rem;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+}

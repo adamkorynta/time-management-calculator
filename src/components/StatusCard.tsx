@@ -52,7 +52,7 @@ export default function StatusCard({ status, effective, hoursPerWeek, result, er
             <NumField
               label="YTD Total Hours"
               unit="h"
-              highlight={!status.ytdHoursAuto}
+             
               disabled={status.ytdHoursAuto}
               error={errors.ytdTotalHours}
               tip="Total regular hours year to date (utilization report 'Reg Hours', YTD row). By default estimated as completed work weeks × your weekly schedule; untick to type the actual number."
@@ -74,7 +74,7 @@ export default function StatusCard({ status, effective, hoursPerWeek, result, er
             </div>
           </div>
           <div className="col-sm-6">
-            <NumField label="YTD Billable Total" unit="pct" max={100} highlight error={errors.ytdBillablePct} tip="Year-to-date billable ('Chargeable') % from your utilization report." value={status.ytdBillablePct} onChange={(v) => onChange({ ytdBillablePct: v })} help={`${fmtHours(result.ytdBillableHours)} billable hours`} />
+            <NumField label="YTD Billable Total" unit="pct" max={100} error={errors.ytdBillablePct} tip="Year-to-date billable ('Chargeable') % from your utilization report." value={status.ytdBillablePct} onChange={(v) => onChange({ ytdBillablePct: v })} help={`${fmtHours(result.ytdBillableHours)} billable hours`} />
           </div>
         </div>
         <p className="mb-3">
@@ -83,13 +83,13 @@ export default function StatusCard({ status, effective, hoursPerWeek, result, er
         </p>
         <div className="row">
           <div className="col-sm-4">
-            <NumField label="YTD PPL" unit="pct" max={100} highlight error={errors.ytdPplPct} tip="Reference only: YTD PPL % from your report." value={status.ytdPplPct} onChange={(v) => onChange({ ytdPplPct: v })} />
+            <NumField label="YTD PPL" unit="pct" max={100} error={errors.ytdPplPct} tip="Reference only: YTD PPL % from your report." value={status.ytdPplPct} onChange={(v) => onChange({ ytdPplPct: v })} />
           </div>
           <div className="col-sm-4">
-            <NumField label="YTD Admin" unit="pct" max={100} highlight error={errors.ytdAdminPct} tip="Reference only: YTD Admin % from your report." value={status.ytdAdminPct} onChange={(v) => onChange({ ytdAdminPct: v })} />
+            <NumField label="YTD Admin" unit="pct" max={100} error={errors.ytdAdminPct} tip="Reference only: YTD Admin % from your report." value={status.ytdAdminPct} onChange={(v) => onChange({ ytdAdminPct: v })} />
           </div>
           <div className="col-sm-4">
-            <NumField label="YTD BD" unit="pct" max={100} highlight error={errors.ytdBdPct} tip="Reference only: YTD business development % from your report." value={status.ytdBdPct} onChange={(v) => onChange({ ytdBdPct: v })} />
+            <NumField label="YTD BD" unit="pct" max={100} error={errors.ytdBdPct} tip="Reference only: YTD business development % from your report." value={status.ytdBdPct} onChange={(v) => onChange({ ytdBdPct: v })} />
           </div>
         </div>
         <p className="form-text mb-2">As in the original workbook, only YTD Total Hours and YTD Billable % drive the calculation; PPL, Admin and BD are for reference.</p>

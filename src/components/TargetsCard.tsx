@@ -92,7 +92,7 @@ export default function TargetsCard({ plan, status, result, errors, onChange }: 
                 <th scope="row">Revised target billable %</th>
                 <td className="text-end fw-semibold">{fmtPct(r.revisedBillablePct, 2)}</td>
                 <td>
-                  <NumField label="What-if billable %" unit="pct" max={100} highlight error={errors.adjustedBillablePct} tip="What-if: the billable % you expect to average for the rest of the year. The year-end result below updates live." value={status.adjustedBillablePct} onChange={(v) => onChange({ adjustedBillablePct: v })} />
+                  <NumField label="What-if billable %" unit="pct" max={100} error={errors.adjustedBillablePct} tip="What-if: the billable % you expect to average for the rest of the year. The year-end result below updates live." value={status.adjustedBillablePct} onChange={(v) => onChange({ adjustedBillablePct: v })} />
                 </td>
               </tr>
               <tr>

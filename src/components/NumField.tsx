@@ -14,13 +14,12 @@ interface Props {
   tip?: string
   /** Inline validation message; marks the field invalid. */
   error?: string
-  highlight?: boolean
   disabled?: boolean
 }
 
 const round = (n: number) => String(Math.round(n * 1e6) / 1e6)
 
-export default function NumField({ label, value, onChange, unit = 'none', min = 0, max, step, help, tip, error, highlight, disabled }: Props) {
+export default function NumField({ label, value, onChange, unit = 'none', min = 0, max, step, help, tip, error, disabled }: Props) {
   const id = useId()
   const scale = unit === 'pct' ? 100 : 1
   // Text draft exists only while editing, so typing "0." or clearing the box doesn't fight the model.
@@ -45,7 +44,7 @@ export default function NumField({ label, value, onChange, unit = 'none', min = 
           id={id}
           type="number"
           inputMode="decimal"
-          className={`form-control ${error ? 'is-invalid' : highlight ? 'bg-success-subtle' : ''}`}
+          className={`form-control ${error ? 'is-invalid' : ''}`}
           value={shown}
           disabled={disabled}
           onBlur={() => setDraft(null)}
