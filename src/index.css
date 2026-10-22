@@ -98,3 +98,79 @@ th {
 summary.card-header {
   cursor: pointer;
 }
+
+/* Guidance + charts */
+.tip {
+  cursor: help;
+  color: var(--gei-teal);
+  font-size: 0.85em;
+}
+.donut {
+  max-width: 220px;
+  width: 100%;
+}
+.gauge {
+  max-width: 320px;
+  width: 100%;
+}
+.donut-big {
+  font-family: 'Fjalla One', 'Source Sans 3', sans-serif;
+  font-size: 22px;
+  fill: var(--gei-navy);
+}
+.donut-small {
+  font-size: 9px;
+  fill: #5d727c;
+}
+.gauge-tick {
+  font-size: 9px;
+  font-weight: 600;
+  fill: #8a6a0f;
+}
+.swatch {
+  display: inline-block;
+  width: 0.9rem;
+  height: 0.9rem;
+  border-radius: 2px;
+  flex: none;
+}
+.legend li {
+  padding: 0.15rem 0;
+  font-size: 0.95rem;
+}
+.print-only {
+  display: none;
+}
+
+@media print {
+  .no-print,
+  .navbar .btn {
+    display: none !important;
+  }
+  .print-only {
+    display: block;
+  }
+  body {
+    background: #fff;
+  }
+  .card,
+  .avoid-break {
+    break-inside: avoid;
+  }
+  .card-header {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  svg,
+  .badge,
+  .table-primary,
+  .alert {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .col-lg-6,
+  .col-lg-7,
+  .col-lg-5 {
+    width: 100%;
+  }
+}

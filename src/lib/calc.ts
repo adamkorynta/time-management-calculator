@@ -4,6 +4,8 @@
  * Cell references in comments point at the original workbook.
  */
 
+import { yearTiming } from './dates'
+
 export const WEEKS_PER_YEAR = 52
 /** D3: =(7*8)/G3 — 7 holidays of 8 hours, fixed. */
 export const HOLIDAY_HOURS_PER_YEAR = 7 * 8
@@ -19,13 +21,14 @@ export interface PlanInputs {
 }
 
 export interface StatusInputs {
-  asOf: string // B19 (ISO date)
+  asOf: string // B19 (ISO date); ignored while asOfAuto is on
+  /** Use today's date as the as-of date (new; the workbook date was typed by hand). */
+  asOfAuto: boolean
   ytdTotalHours: number // B27
   ytdBillablePct: number // B25 (0–1)
   ytdPplPct: number // B20 (informational)
   ytdAdminPct: number // B21 (informational)
   ytdBdPct: number // B22 (informational)
-  ytdNonBillablePct: number // B23 (informational)
   plannedPplRemaining: number // B33
   plannedHolidayRemaining: number // B34
   adjustedBillablePct: number // C36 (what-if, 0–1)
@@ -98,9 +101,29 @@ export function computePlan(p: PlanInputs): PlanResult {
   return { hoursPerYear: g3, rows, total, unallocatedHours: g3 - total.hoursPerYear }
 }
 
+export type PaceStatus = 'ahead' | 'onPace' | 'atRisk' | 'behind'
+export type TargetStatus = 'achievable' | 'met' | 'impossible'
+
+/**
+ * Pace bands, in percentage points of YTD billable % vs. the original target:
+ * within 5 points either way is fine; 5–10 points under is at risk; more than 10 under is behind.
+ */
+export const PACE_OK_POINTS = 0.05
+export const PACE_BEHIND_POINTS = 0.1
+
+export function paceStatus(deltaPct: number): PaceStatus {
+  const d = Math.round(deltaPct * 1e9) / 1e9 // absorb float noise at the band edges
+  if (d > PACE_OK_POINTS) return 'ahead'
+  if (d >= -PACE_OK_POINTS) return 'onPace'
+  if (d >= -PACE_BEHIND_POINTS) return 'atRisk'
+  return 'behind'
+}
+
 export interface RemainingResult {
   ytdBillableHours: number // B26
   ytdNonBillableHours: number // B24
+  /** B23, now derived: 100% − YTD billable % */
+  ytdNonBillablePct: number
   hoursRemaining: number // B30
   originalBillablePct: number // B31
   originalBillableHours: number // B32
@@ -117,6 +140,20 @@ export interface RemainingResult {
   adjustedNonBillableHoursPerWeek: number // C39
   /** D36: full-year billable % if you bill the adjusted % for the remaining workable hours. */
   yearEndBillablePct: number | null
+  /** Calendar weeks left in the as-of year (null when the date is invalid). */
+  weeksRemaining: number | null
+  /** Total hours you'd have worked by the as-of date on a straight 52-week schedule. */
+  expectedYtdHours: number | null
+  pace: PaceStatus
+  /** YTD billable % minus the original target % (percentage points as a 0–1 fraction). */
+  paceDeltaPct: number
+  /** YTD billable hours minus (target % × YTD total hours). */
+  paceDeltaHours: number
+  targetStatus: TargetStatus
+  /** Billable hours short of the target even at 100% billable for all workable hours (0 if achievable). */
+  shortfallHours: number
+  /** Best possible year-end billable % (100% billable for the rest of the year). */
+  maxYearEndBillablePct: number | null
   /** Sum of the informational YTD PPL + Admin + BD percentages (compare with YTD non-billable total). */
   ytdBreakdownPct: number
 }
@@ -129,13 +166,18 @@ export function computeRemaining(p: PlanInputs, s: StatusInputs): RemainingResul
   const workable = hoursRemaining - s.plannedPplRemaining - s.plannedHolidayRemaining
   const billableHoursStillNeeded = originalBillableHours - ytdBillableHours
 
-  const revised = div(billableHoursStillNeeded, workable)
+  const revised = workable > 0 ? div(billableHoursStillNeeded, workable) : null
   const perWeek = (v: number | null) => (v === null ? null : v * p.hoursPerWeek)
   const nonBillable = revised === null ? null : 1 - revised
+  const timing = yearTiming(s.asOf)
+  const paceDeltaPct = s.ytdBillablePct - p.billablePct
+  const targetStatus: TargetStatus =
+    billableHoursStillNeeded <= 0 ? 'met' : revised === null || revised > 1 ? 'impossible' : 'achievable'
 
   return {
     ytdBillableHours,
     ytdNonBillableHours: s.ytdTotalHours - ytdBillableHours,
+    ytdNonBillablePct: 1 - s.ytdBillablePct,
     hoursRemaining,
     originalBillablePct: p.billablePct,
     originalBillableHours,
@@ -149,6 +191,14 @@ export function computeRemaining(p: PlanInputs, s: StatusInputs): RemainingResul
     adjustedNonBillablePct: 1 - s.adjustedBillablePct,
     adjustedNonBillableHoursPerWeek: (1 - s.adjustedBillablePct) * p.hoursPerWeek,
     yearEndBillablePct: div(ytdBillableHours + workable * s.adjustedBillablePct, g3),
+    weeksRemaining: timing?.weeksRemaining ?? null,
+    expectedYtdHours: timing ? g3 * timing.fractionElapsed : null,
+    pace: paceStatus(paceDeltaPct),
+    paceDeltaPct,
+    paceDeltaHours: ytdBillableHours - p.billablePct * s.ytdTotalHours,
+    targetStatus,
+    shortfallHours: targetStatus === 'impossible' ? billableHoursStillNeeded - Math.max(workable, 0) : 0,
+    maxYearEndBillablePct: div(ytdBillableHours + Math.max(workable, 0), g3),
     ytdBreakdownPct: s.ytdPplPct + s.ytdAdminPct + s.ytdBdPct,
   }
 }
@@ -165,13 +215,13 @@ export const DEFAULT_PLAN: PlanInputs = {
 }
 
 export const DEFAULT_STATUS: StatusInputs = {
-  asOf: new Date().toLocaleDateString('en-CA'), // today, YYYY-MM-DD (workbook had 2026-03-09)
+  asOf: '2026-03-09', // workbook value; only used when asOfAuto is off
+  asOfAuto: true,
   ytdTotalHours: 360,
   ytdBillablePct: 0.503,
   ytdPplPct: 0.123,
   ytdAdminPct: 0.178,
   ytdBdPct: 0.127,
-  ytdNonBillablePct: 0.428,
   plannedPplRemaining: 80,
   plannedHolidayRemaining: 40,
   adjustedBillablePct: 0.8,

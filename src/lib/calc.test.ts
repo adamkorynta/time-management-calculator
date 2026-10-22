@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { allocationStatus, computePlan, computeRemaining, DEFAULT_PLAN, DEFAULT_STATUS } from './calc'
+import { allocationStatus, computePlan, computeRemaining, DEFAULT_PLAN, DEFAULT_STATUS, paceStatus } from './calc'
 
 // Expected values are the cached results saved in the original workbook.
 describe('computePlan (workbook defaults)', () => {
@@ -69,5 +69,39 @@ describe('allocationStatus', () => {
   it('flags real gaps', () => {
     expect(at(0.02)).toBe('over')
     expect(at(-0.05)).toBe('under')
+  })
+})
+
+describe('pace and achievability', () => {
+  it('flags behind pace and an infeasible target', () => {
+    // User's real YTD: 1,680 h at 71.1% vs 75% goal, 16 holiday hours left.
+    const r = computeRemaining({ ...DEFAULT_PLAN, billablePct: 0.75 }, { ...DEFAULT_STATUS, ytdTotalHours: 1680, ytdBillablePct: 0.711, plannedPplRemaining: 0, plannedHolidayRemaining: 16 })
+    expect(r.revisedBillablePct).toBeCloseTo(0.951875, 6)
+    expect(r.pace).toBe('onPace') // 3.9 points under: within the 5-point band
+    expect(r.paceDeltaHours).toBeCloseTo(-65.52, 6)
+    expect(r.targetStatus).toBe('achievable')
+    expect(r.ytdNonBillablePct).toBeCloseTo(0.289, 9)
+  })
+  it('reports not achievable when revised % exceeds 100%', () => {
+    const r = computeRemaining({ ...DEFAULT_PLAN, billablePct: 0.8 }, { ...DEFAULT_STATUS, ytdTotalHours: 1680, ytdBillablePct: 0.711, plannedPplRemaining: 0, plannedHolidayRemaining: 16 })
+    expect(r.targetStatus).toBe('impossible')
+    expect(r.shortfallHours).toBeCloseTo(0.8 * 2080 - 0.711 * 1680 - 384, 6)
+    expect(r.maxYearEndBillablePct).toBeCloseTo((0.711 * 1680 + 384) / 2080, 9)
+  })
+  it('reports met when already ahead of target hours', () => {
+    const r = computeRemaining(DEFAULT_PLAN, { ...DEFAULT_STATUS, ytdTotalHours: 2000, ytdBillablePct: 0.9 })
+    expect(r.targetStatus).toBe('met')
+    expect(r.pace).toBe('ahead')
+  })
+})
+
+describe('paceStatus bands', () => {
+  it('uses ±5 / −10 point bands', () => {
+    expect(paceStatus(0.06)).toBe('ahead')
+    expect(paceStatus(0.05)).toBe('onPace')
+    expect(paceStatus(-0.05)).toBe('onPace')
+    expect(paceStatus(-0.051)).toBe('atRisk')
+    expect(paceStatus(-0.1)).toBe('atRisk')
+    expect(paceStatus(-0.101)).toBe('behind')
   })
 })

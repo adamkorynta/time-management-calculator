@@ -1,8 +1,12 @@
 import { useEffect, useState } from 'react'
 
-/** useState mirrored to localStorage (merged over defaults so new fields survive older saves). */
-export function usePersistentState<T extends object>(key: string, initial: T) {
+/**
+ * useState mirrored to localStorage (merged over defaults so new fields survive older saves).
+ * A `seed` (e.g. from a shared link) takes priority over what was saved.
+ */
+export function usePersistentState<T extends object>(key: string, initial: T, seed?: T | null) {
   const [value, setValue] = useState<T>(() => {
+    if (seed) return seed
     try {
       const raw = localStorage.getItem(key)
       if (raw) return { ...initial, ...JSON.parse(raw) }

@@ -2,6 +2,10 @@
 
 Ordered by value ÷ effort. Charting suggestion: [Recharts](https://recharts.org) (React-native, small) or Chart.js; keep GEI palette from `docs/reference/theme.md`.
 
+> **Implemented:** #1 (allocation donut), #3 (billable gauge), #10 (auto as-of date, weeks remaining, pace badge),
+> #13 (share link, print/PDF, generated .xlsx), #14 (inline validation, tooltips, "target not achievable").
+> Pace bands: within 5 points of target = on pace, 5–10 under = at risk, >10 under = behind.
+
 ## Charts
 1. **Annual time-allocation donut / stacked bar** — Holiday, PPL, Meetings, Billable, BD, Prof Dev, Practice as share of the 2,080 h year. Makes over/under-allocation obvious; add an "Unallocated" slice.
 2. **Billable progress bullet chart** — YTD billable hours vs. original target (1,664 h) vs. pace line for the as-of date; marker for the revised-target path.

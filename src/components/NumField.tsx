@@ -10,13 +10,16 @@ interface Props {
   max?: number
   step?: number
   help?: string
+  /** Explanation shown as a tooltip on the ⓘ next to the label. */
+  tip?: string
+  /** Inline validation message; marks the field invalid. */
+  error?: string
   highlight?: boolean
 }
 
 const round = (n: number) => String(Math.round(n * 1e6) / 1e6)
 
-/** Number input that keeps its own text draft so typing "0." or clearing the box doesn't fight the model. */
-export default function NumField({ label, value, onChange, unit = 'none', min = 0, max, step, help, highlight }: Props) {
+export default function NumField({ label, value, onChange, unit = 'none', min = 0, max, step, help, tip, error, highlight }: Props) {
   const id = useId()
   const scale = unit === 'pct' ? 100 : 1
   // Text draft exists only while editing, so typing "0." or clearing the box doesn't fight the model.
@@ -28,18 +31,25 @@ export default function NumField({ label, value, onChange, unit = 'none', min = 
     <div className="mb-3">
       <label htmlFor={id} className="form-label mb-1">
         {label}
+        {tip && (
+          <span className="tip ms-1" title={tip} tabIndex={0} role="img" aria-label={`Help: ${tip}`}>
+            ⓘ
+          </span>
+        )}
       </label>
-      <div className="input-group">
+      <div className="input-group has-validation">
         <input
           id={id}
           type="number"
           inputMode="decimal"
-          className={`form-control ${highlight ? 'bg-success-subtle' : ''}`}
+          className={`form-control ${error ? 'is-invalid' : highlight ? 'bg-success-subtle' : ''}`}
           value={shown}
           onBlur={() => setDraft(null)}
           min={min}
           max={max}
           step={step ?? (unit === 'pct' ? 1 : 'any')}
+          aria-invalid={error ? true : undefined}
+          aria-describedby={error ? `${id}-err` : undefined}
           onChange={(e) => {
             setDraft(e.target.value)
             const n = e.target.valueAsNumber
@@ -47,8 +57,13 @@ export default function NumField({ label, value, onChange, unit = 'none', min = 
           }}
         />
         {suffix && <span className="input-group-text">{suffix}</span>}
+        {error && (
+          <div id={`${id}-err`} className="invalid-feedback">
+            {error}
+          </div>
+        )}
       </div>
-      {help && <div className="form-text">{help}</div>}
+      {help && !error && <div className="form-text">{help}</div>}
     </div>
   )
 }
