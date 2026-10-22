@@ -4,7 +4,8 @@ import { fmtHours, fmtPct } from '../lib/format'
 import { newRowId } from '../lib/plan'
 import type { FieldErrors } from '../lib/validate'
 
-const round = (n: number) => String(Math.round(n * 1e4) / 1e4)
+/** Derived values show 2 decimals; the column the user typed in keeps full precision. */
+const round = (n: number, digits: number) => String(Math.round(n * 10 ** digits) / 10 ** digits)
 
 interface CellProps {
   label: string
@@ -28,7 +29,7 @@ function Cell({ label, value, scale = 1, source, invalid, onCommit }: CellProps)
       aria-label={label}
       className={`form-control form-control-sm text-end ${invalid ? 'is-invalid' : ''} ${source ? 'cell-source' : ''}`}
       title={source ? 'You entered this column; it stays fixed if your schedule changes.' : undefined}
-      value={draft ?? round(value * scale)}
+      value={draft ?? round(value * scale, source ? 4 : 2)}
       onBlur={() => setDraft(null)}
       onChange={(e) => {
         setDraft(e.target.value)
@@ -69,7 +70,7 @@ export default function OverheadTable({ plan, result, errors, onChange }: Props)
             <th>Category</th>
             <th className="text-end num-col">Hours/week</th>
             <th className="text-end num-col">Hours/year</th>
-            <th className="text-end num-col">Allocation %</th>
+            <th className="text-end num-col">%</th>
             <th className="x-col" />
           </tr>
         </thead>
