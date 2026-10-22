@@ -5,9 +5,8 @@ import PaceBadge from './components/PaceBadge'
 import PlanCard from './components/PlanCard'
 import StatusCard from './components/StatusCard'
 import TargetsCard from './components/TargetsCard'
-import { computePlan, computeRemaining, DEFAULT_PLAN, DEFAULT_STATUS } from './lib/calc'
+import { computePlan, computeRemaining, DEFAULT_PLAN, DEFAULT_STATUS, resolveStatus } from './lib/calc'
 import type { PlanInputs, StatusInputs } from './lib/calc'
-import { todayISO } from './lib/dates'
 import { PPL_TABLE } from './lib/pplTable'
 import { decodeShare, shareUrl } from './lib/share'
 import { usePersistentState } from './lib/usePersistentState'
@@ -24,8 +23,8 @@ export default function App() {
   const [{ tierIdx }, setUi] = usePersistentState('tmc.ui.v1', { tierIdx: 3 }, shared ? { tierIdx: shared.tierIdx } : null)
   const [notice, setNotice] = useState<string | null>(shared ? 'Loaded inputs from a shared link. They are now saved in this browser.' : null)
 
-  const asOf = status.asOfAuto ? todayISO() : status.asOf
-  const effective = useMemo(() => ({ ...status, asOf }), [status, asOf])
+  const effective = useMemo(() => resolveStatus(plan, status), [plan, status])
+  const asOf = effective.asOf
   const planResult = useMemo(() => computePlan(plan), [plan])
   const remaining = useMemo(() => computeRemaining(plan, effective), [plan, effective])
   const errors = useMemo(() => validateInputs(plan, effective), [plan, effective])
@@ -97,7 +96,7 @@ export default function App() {
             <PlanCard plan={plan} result={planResult} errors={errors} tierIdx={tierIdx} onTierChange={(i) => setUi({ tierIdx: i })} onChange={(p) => setPlan((s) => ({ ...s, ...p }))} />
           </div>
           <div className="col-lg-6">
-            <StatusCard status={status} asOf={asOf} result={remaining} errors={errors} onChange={(p) => setStatus((s) => ({ ...s, ...p }))} />
+            <StatusCard status={status} effective={effective} hoursPerWeek={plan.hoursPerWeek} result={remaining} errors={errors} onChange={(p) => setStatus((s) => ({ ...s, ...p }))} />
           </div>
         </div>
 

@@ -5,7 +5,7 @@ interface Props {
   value: number
   onChange: (v: number) => void
   /** 'pct' displays/edits 0–1 values as 0–100. */
-  unit?: 'pct' | 'h' | 'none'
+  unit?: 'pct' | 'h' | 'days' | 'none'
   min?: number
   max?: number
   step?: number
@@ -15,18 +15,19 @@ interface Props {
   /** Inline validation message; marks the field invalid. */
   error?: string
   highlight?: boolean
+  disabled?: boolean
 }
 
 const round = (n: number) => String(Math.round(n * 1e6) / 1e6)
 
-export default function NumField({ label, value, onChange, unit = 'none', min = 0, max, step, help, tip, error, highlight }: Props) {
+export default function NumField({ label, value, onChange, unit = 'none', min = 0, max, step, help, tip, error, highlight, disabled }: Props) {
   const id = useId()
   const scale = unit === 'pct' ? 100 : 1
   // Text draft exists only while editing, so typing "0." or clearing the box doesn't fight the model.
   const [draft, setDraft] = useState<string | null>(null)
   const shown = draft ?? round(value * scale)
 
-  const suffix = unit === 'pct' ? '%' : unit === 'h' ? 'h' : null
+  const suffix = unit === 'pct' ? '%' : unit === 'h' ? 'h' : unit === 'days' ? 'days' : null
   return (
     <div className="mb-3 h-100 d-flex flex-column">
       <label htmlFor={id} className="form-label mb-1 flex-grow-1 d-flex align-items-end">
@@ -46,6 +47,7 @@ export default function NumField({ label, value, onChange, unit = 'none', min = 
           inputMode="decimal"
           className={`form-control ${error ? 'is-invalid' : highlight ? 'bg-success-subtle' : ''}`}
           value={shown}
+          disabled={disabled}
           onBlur={() => setDraft(null)}
           min={min}
           max={max}

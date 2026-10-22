@@ -35,3 +35,16 @@ export function excelSerial(iso: string): number | null {
   if (!d) return null
   return Math.round((Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) - Date.UTC(1899, 11, 30)) / DAY_MS)
 }
+
+/**
+ * Completed Monday–Friday work weeks in the as-of year, counted as Fridays on or before the date
+ * (a week counts once its Friday has passed, matching pay-period style reporting).
+ */
+export function workWeeksElapsed(iso: string): number | null {
+  const d = parse(iso)
+  if (!d) return null
+  const jan1 = new Date(d.getFullYear(), 0, 1)
+  const dayIndex = Math.round((d.getTime() - jan1.getTime()) / DAY_MS) // 0-based
+  const firstFriday = (5 - jan1.getDay() + 7) % 7
+  return dayIndex < firstFriday ? 0 : Math.floor((dayIndex - firstFriday) / 7) + 1
+}

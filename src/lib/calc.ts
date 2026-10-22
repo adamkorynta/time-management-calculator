@@ -4,7 +4,8 @@
  * Cell references in comments point at the original workbook.
  */
 
-import { yearTiming } from './dates'
+import { estimateHolidayHours } from './holidays'
+import { todayISO, workWeeksElapsed, yearTiming } from './dates'
 
 export const WEEKS_PER_YEAR = 52
 /** D3: =(7*8)/G3 — 7 holidays of 8 hours, fixed. */
@@ -24,6 +25,12 @@ export interface StatusInputs {
   asOf: string // B19 (ISO date); ignored while asOfAuto is on
   /** Use today's date as the as-of date (new; the workbook date was typed by hand). */
   asOfAuto: boolean
+  /** Estimate YTD total hours as completed work weeks × weekly schedule instead of typing it in. */
+  ytdHoursAuto: boolean
+  /** Estimate holiday hours remaining from GEI's holiday calendar and the as-of date. */
+  holidayAuto: boolean
+  /** Floating holiday already taken this year (only matters while holidayAuto is on). */
+  floatingUsed: boolean
   ytdTotalHours: number // B27
   ytdBillablePct: number // B25 (0–1)
   ytdPplPct: number // B20 (informational)
@@ -142,8 +149,6 @@ export interface RemainingResult {
   yearEndBillablePct: number | null
   /** Calendar weeks left in the as-of year (null when the date is invalid). */
   weeksRemaining: number | null
-  /** Total hours you'd have worked by the as-of date on a straight 52-week schedule. */
-  expectedYtdHours: number | null
   pace: PaceStatus
   /** YTD billable % minus the original target % (percentage points as a 0–1 fraction). */
   paceDeltaPct: number
@@ -156,6 +161,28 @@ export interface RemainingResult {
   maxYearEndBillablePct: number | null
   /** Sum of the informational YTD PPL + Admin + BD percentages (compare with YTD non-billable total). */
   ytdBreakdownPct: number
+  /** PPL hours used YTD: YTD PPL % × YTD total hours (informational). */
+  pplUsedYtdHours: number
+  /** Annual PPL accrual minus PPL used YTD; negative means more used than accrued. Excludes carryover. */
+  pplUnusedHours: number
+}
+
+/** Estimated YTD hours: completed work weeks × weekly schedule (null for an invalid date). */
+export function estimateYtdHours(hoursPerWeek: number, asOf: string): number | null {
+  const weeks = workWeeksElapsed(asOf)
+  return weeks === null ? null : weeks * hoursPerWeek
+}
+
+/** Apply the "use today" and "estimate YTD hours" switches to produce the values the calculation uses. */
+export function resolveStatus(p: PlanInputs, s: StatusInputs, today: string = todayISO()): StatusInputs {
+  const asOf = s.asOfAuto ? today : s.asOf
+  const estimate = s.ytdHoursAuto ? estimateYtdHours(p.hoursPerWeek, asOf) : null
+  return {
+    ...s,
+    asOf,
+    ytdTotalHours: estimate ?? s.ytdTotalHours,
+    plannedHolidayRemaining: s.holidayAuto ? estimateHolidayHours(asOf, s.floatingUsed) : s.plannedHolidayRemaining,
+  }
 }
 
 export function computeRemaining(p: PlanInputs, s: StatusInputs): RemainingResult {
@@ -192,7 +219,6 @@ export function computeRemaining(p: PlanInputs, s: StatusInputs): RemainingResul
     adjustedNonBillableHoursPerWeek: (1 - s.adjustedBillablePct) * p.hoursPerWeek,
     yearEndBillablePct: div(ytdBillableHours + workable * s.adjustedBillablePct, g3),
     weeksRemaining: timing?.weeksRemaining ?? null,
-    expectedYtdHours: timing ? g3 * timing.fractionElapsed : null,
     pace: paceStatus(paceDeltaPct),
     paceDeltaPct,
     paceDeltaHours: ytdBillableHours - p.billablePct * s.ytdTotalHours,
@@ -200,6 +226,8 @@ export function computeRemaining(p: PlanInputs, s: StatusInputs): RemainingResul
     shortfallHours: targetStatus === 'impossible' ? billableHoursStillNeeded - Math.max(workable, 0) : 0,
     maxYearEndBillablePct: div(ytdBillableHours + Math.max(workable, 0), g3),
     ytdBreakdownPct: s.ytdPplPct + s.ytdAdminPct + s.ytdBdPct,
+    pplUsedYtdHours: s.ytdPplPct * s.ytdTotalHours,
+    pplUnusedHours: p.pplHoursPerYear - s.ytdPplPct * s.ytdTotalHours,
   }
 }
 
@@ -217,6 +245,9 @@ export const DEFAULT_PLAN: PlanInputs = {
 export const DEFAULT_STATUS: StatusInputs = {
   asOf: '2026-03-09', // workbook value; only used when asOfAuto is off
   asOfAuto: true,
+  ytdHoursAuto: true,
+  holidayAuto: true,
+  floatingUsed: false,
   ytdTotalHours: 360,
   ytdBillablePct: 0.503,
   ytdPplPct: 0.123,

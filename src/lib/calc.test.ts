@@ -105,3 +105,15 @@ describe('paceStatus bands', () => {
     expect(paceStatus(-0.101)).toBe('behind')
   })
 })
+
+describe('PPL remaining note', () => {
+  it('derives unused PPL from accrual and YTD PPL %', () => {
+    const r = computeRemaining({ ...DEFAULT_PLAN, pplHoursPerYear: 220 }, { ...DEFAULT_STATUS, ytdTotalHours: 1680, ytdPplPct: 0.08 })
+    expect(r.pplUsedYtdHours).toBeCloseTo(134.4, 9)
+    expect(r.pplUnusedHours).toBeCloseTo(85.6, 9)
+  })
+  it('goes negative when more PPL was used than accrued', () => {
+    const r = computeRemaining({ ...DEFAULT_PLAN, pplHoursPerYear: 100 }, { ...DEFAULT_STATUS, ytdTotalHours: 1000, ytdPplPct: 0.2 })
+    expect(r.pplUnusedHours).toBeCloseTo(-100, 9)
+  })
+})
