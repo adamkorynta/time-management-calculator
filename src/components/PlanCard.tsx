@@ -14,7 +14,6 @@ export default function PlanCard({ plan, result, onChange }: Props) {
   const [tierIdx, setTierIdx] = useState(3)
   const suggested = pplForTier(PPL_TABLE[tierIdx], plan.hoursPerWeek)
   const over = result.total.pct > 1.0000001
-  const rowByKey = Object.fromEntries(result.rows.map((r) => [r.key, r]))
 
   return (
     <div className="card h-100">
@@ -96,8 +95,7 @@ export default function PlanCard({ plan, result, onChange }: Props) {
           <div className={`alert ${over ? 'alert-danger' : 'alert-warning'} py-2 mb-0`} role="status">
             {over
               ? `Over-allocated by ${fmtHours(-result.unallocatedHours)} hours/year.`
-              : `${fmtHours(result.unallocatedHours)} hours/year (${fmtHours(result.unallocatedHours / 52)} h/week) are not allocated.`}{' '}
-            Holiday is fixed at 56 h/year; billable is {fmtPct(rowByKey.billable.pct, 0)}.
+              : `${fmtHours(result.unallocatedHours)} hours/year (${fmtHours(result.unallocatedHours / 52)} h/week) are not allocated.`}
           </div>
         )}
       </div>

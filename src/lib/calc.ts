@@ -154,7 +154,7 @@ export const DEFAULT_PLAN: PlanInputs = {
 }
 
 export const DEFAULT_STATUS: StatusInputs = {
-  asOf: '2026-03-09',
+  asOf: new Date().toLocaleDateString('en-CA'), // today, YYYY-MM-DD (workbook had 2026-03-09)
   ytdTotalHours: 360,
   ytdBillablePct: 0.503,
   ytdPplPct: 0.123,

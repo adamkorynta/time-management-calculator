@@ -43,7 +43,7 @@ export default function NumField({ label, value, onChange, unit = 'none', min = 
           onChange={(e) => {
             setDraft(e.target.value)
             const n = e.target.valueAsNumber
-            onChange(Number.isFinite(n) ? n / scale : 0)
+            onChange(Number.isFinite(n) ? Math.round((n / scale) * 1e9) / 1e9 : 0)
           }}
         />
         {suffix && <span className="input-group-text">{suffix}</span>}
